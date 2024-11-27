@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/michaela/straw/MichaelGarfield/cell_study
+CMAKE_SOURCE_DIR = /home/michaela/straw/MichaelGarfield/expert_geosim
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/michaela/straw/MichaelGarfield/cell_study/build
+CMAKE_BINARY_DIR = /home/michaela/straw/MichaelGarfield/expert_geosim/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michaela/straw/MichaelGarfield/cell_study/build/CMakeFiles /home/michaela/straw/MichaelGarfield/cell_study/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michaela/straw/MichaelGarfield/expert_geosim/build/CMakeFiles /home/michaela/straw/MichaelGarfield/expert_geosim/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michaela/straw/MichaelGarfield/cell_study/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michaela/straw/MichaelGarfield/expert_geosim/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,41 +117,41 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named straw
+# Target rules for targets named geo
 
 # Build rule for target.
-straw: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 straw
-.PHONY : straw
+geo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 geo
+.PHONY : geo
 
 # fast build rule for target.
-straw/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/straw.dir/build.make CMakeFiles/straw.dir/build
-.PHONY : straw/fast
+geo/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/geo.dir/build.make CMakeFiles/geo.dir/build
+.PHONY : geo/fast
 
-straw.o: straw.cc.o
-.PHONY : straw.o
+geo.o: geo.cc.o
+.PHONY : geo.o
 
 # target to build an object file
-straw.cc.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/straw.dir/build.make CMakeFiles/straw.dir/straw.cc.o
-.PHONY : straw.cc.o
+geo.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/geo.dir/build.make CMakeFiles/geo.dir/geo.cc.o
+.PHONY : geo.cc.o
 
-straw.i: straw.cc.i
-.PHONY : straw.i
+geo.i: geo.cc.i
+.PHONY : geo.i
 
 # target to preprocess a source file
-straw.cc.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/straw.dir/build.make CMakeFiles/straw.dir/straw.cc.i
-.PHONY : straw.cc.i
+geo.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/geo.dir/build.make CMakeFiles/geo.dir/geo.cc.i
+.PHONY : geo.cc.i
 
-straw.s: straw.cc.s
-.PHONY : straw.s
+geo.s: geo.cc.s
+.PHONY : geo.s
 
 # target to generate assembly for a file
-straw.cc.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/straw.dir/build.make CMakeFiles/straw.dir/straw.cc.s
-.PHONY : straw.cc.s
+geo.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/geo.dir/build.make CMakeFiles/geo.dir/geo.cc.s
+.PHONY : geo.cc.s
 
 # Help Target
 help:
@@ -161,10 +161,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... straw"
-	@echo "... straw.o"
-	@echo "... straw.i"
-	@echo "... straw.s"
+	@echo "... geo"
+	@echo "... geo.o"
+	@echo "... geo.i"
+	@echo "... geo.s"
 .PHONY : help
 
 

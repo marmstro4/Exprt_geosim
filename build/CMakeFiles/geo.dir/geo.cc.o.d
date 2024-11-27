@@ -1,5 +1,5 @@
-CMakeFiles/straw.dir/straw.cc.o: \
- /home/michaela/straw/MichaelGarfield/cell_study/straw.cc \
+CMakeFiles/geo.dir/geo.cc.o: \
+ /home/michaela/straw/MichaelGarfield/expert_geosim/geo.cc \
  /usr/include/stdc-predef.h /usr/include/c++/13/cstdlib \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \

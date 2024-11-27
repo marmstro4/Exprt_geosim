@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/michaela/straw/MichaelGarfield/cell_study/straw.cc" "CMakeFiles/straw.dir/straw.cc.o" "gcc" "CMakeFiles/straw.dir/straw.cc.o.d"
+  "/home/michaela/straw/MichaelGarfield/expert_geosim/geo.cc" "CMakeFiles/geo.dir/geo.cc.o" "gcc" "CMakeFiles/geo.dir/geo.cc.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

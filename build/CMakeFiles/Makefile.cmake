@@ -16,7 +16,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/michaela/Downloads/root_build/ROOTConfig.cmake"
   "/home/michaela/Downloads/root_build/RootMacros.cmake"
   "/home/michaela/Downloads/root_src/cmake/modules/FindVdt.cmake"
-  "/home/michaela/straw/MichaelGarfield/cell_study/CMakeLists.txt"
+  "/home/michaela/straw/MichaelGarfield/expert_geosim/CMakeLists.txt"
   "CMakeFiles/3.28.3/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeSystem.cmake"
@@ -141,5 +141,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/straw.dir/DependInfo.cmake"
+  "CMakeFiles/geo.dir/DependInfo.cmake"
   )

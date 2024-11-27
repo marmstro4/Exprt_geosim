@@ -6,8 +6,8 @@ if(NOT TARGET Garfield::Garfield)
 endif()
 
 # ---Build executable------------------------------------------------------------
-add_executable(straw straw.cc)
-target_link_libraries(straw Garfield::Garfield)
+add_executable(geo geo.cc)
+target_link_libraries(geo Garfield::Garfield)
 
 # ---Copy all files locally to the build directory-------------------------------
 #foreach(_file ELIST.lis MPLIST.lis NLIST.lis PRNSOL.lis)

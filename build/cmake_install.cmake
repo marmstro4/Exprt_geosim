@@ -1,4 +1,4 @@
-# Install script for directory: /home/michaela/straw/MichaelGarfield/cell_study
+# Install script for directory: /home/michaela/straw/MichaelGarfield/expert_geosim
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/michaela/straw/MichaelGarfield/cell_study/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/michaela/straw/MichaelGarfield/expert_geosim/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
