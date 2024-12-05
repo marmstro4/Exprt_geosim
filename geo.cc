@@ -153,26 +153,43 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
 
 }
 
-void PlotMidYZ(const std::vector<double>& yCenter, const std::vector<double>& zCenter) {
+void PlotMidYZ(const std::vector<double>& zCenter, const std::vector<double>& yCenter) {
     TCanvas* canvas = new TCanvas("canvas", "Straws and Track", 800, 800);
     // Create a canvas
     canvas->SetFixedAspectRatio(); // Ensure equal scaling on both axes
     canvas->DrawFrame(-20, -20, 20, 20); // Set the drawing frame (xMin, yMin, xMax, yMax)
 
-    TGraph* graph = new TGraph(yCenter.size(), zCenter.data(), yCenter.data());
-    graph->SetLineStyle(0);
-    graph->SetMarkerStyle(20); // Set marker style (20 is a solid circle)
-    graph->SetMarkerSize(1.0); // Default size, can be adjusted
-    graph->SetMarkerColor(kRed);  // Red points
-    graph->Draw("AP");
+    // Draw the circles (straws)
+    for (size_t i = 0; i < yCenter.size(); ++i) {
+
+        TEllipse* straw = new TEllipse(zCenter[i], yCenter[i], rCell);
+        straw->SetFillStyle(0); // No fill
+        straw->SetLineColor(kBlack);
+        straw->Draw("same");
+    }
 
     canvas->Update();
+}
+
+void PlotDOCAZY(const std::vector<double>& zcell, const std::vector<double>& ycell, std::vector<double> radius) {
+
+    // Draw the circles (straws)
+    for (size_t i = 0; i < radius.size(); ++i) {
+
+        //if ((i < rows*2*layers) || (( (i > 2*rows*2*layers) && (i < 2*rows*3*layers)))) {
+            TEllipse* DOCA = new TEllipse(zcell[i], ycell[i], radius[i]);
+            DOCA->SetFillStyle(0); // No fill
+            DOCA->SetLineColor(kRed);
+            DOCA->Draw("same");
+        //}
+    }
+
 }
 
 void PlotXYCells(const std::vector<double>& xCenter, const std::vector<double>& yCenter) {
     // Check if the inputs are valid
 
-    TCanvas* canvas = new TCanvas("canvas", "Straws and Track", 800, 800);
+    TCanvas* canvas = new TCanvas("canvas", "Straws and Track", 1000, 1000);
     // Create a canvas
     canvas->SetFixedAspectRatio(); // Ensure equal scaling on both axes
     canvas->DrawFrame(-20, -20, 20, 20); // Set the drawing frame (xMin, yMin, xMax, yMax)
@@ -248,89 +265,149 @@ std::vector<double> generateDir() {
 }
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>,
-           std::vector<double>, std::vector<double>, std::vector<double>>
+           std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
 hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double> ycell, std::vector<double> zcell) {
 
     std::vector<double> xcells, ycells, zcells;
     std::vector<double> xhits, yhits, zhits;
+    std::vector<double> radius;
 
-    double L = 12.5;
-    double ux = dirvect[0], uy = dirvect[1], uz = dirvect[2];
+    double L = 15;
+    double mag = sqrt(dirvect[0]*dirvect[0]+dirvect[1]*dirvect[1]+dirvect[2]*dirvect[2]);
+    double ux = dirvect[0]/mag, uy = dirvect[1]/mag, uz = dirvect[2]/mag;
+    double A,B,C;
 
     for (size_t i = 0; i < zcell.size(); i++) {
 
-        double x0 = xcell[i], y0 = ycell[i], z0 = zcell[i];
-
-        double A = uy * uy + uz * uz;
-        double B = 2 * (y0 * uy + z0 * uz);
-        double C = y0 * y0 + z0 * z0 - rCell * rCell;
-
-        // Calculate the discriminant
-        double discriminant = B * B - 4 * A * C;
-
-        if (discriminant < 0) {
-            //std::cout << "No intersection" << std::endl;
-            continue;
+        if ((i < rows*2*layers) || (( (i > 2*rows*2*layers) && (i < 2*rows*3*layers)))) {
+            A = uz*uz+uy*uy;
+            B = -2*(uz*zcell[i]+uy*ycell[i]);
+            C = zcell[i]*zcell[i] + ycell[i]*ycell[i] - rCell*rCell;
         }
 
-        // Calculate the two solutions for t
-        double t1 = (-B - std::sqrt(discriminant)) / (2 * A);
-        double t2 = (-B + std::sqrt(discriminant)) / (2 * A);
-
-        // Compute intersection points
-        double x1 = x0 + t1 * ux;
-        double y1 = y0 + t1 * uy;
-        double z1 = z0 + t1 * uz;
-
-        double x2 = x0 + t2 * ux;
-        double y2 = y0 + t2 * uy;
-        double z2 = z0 + t2 * uz;
-
-        double diff1 = std::sqrt(x1 * x1 + y1 * y1 + z1 * z1);
-        double diff2 = std::sqrt(x2 * x2 + y2 * y2 + z2 * z2);
-
-        if (x1 >= x0 - L / 2 && x1 <= x0 + L / 2) {
-            if (diff2 > diff1) {
-                xhits.push_back(x1);
-                yhits.push_back(y1);
-                zhits.push_back(z1);
-
-                xcells.push_back(x0);
-                ycells.push_back(y0);
-                zcells.push_back(z0);
-            } else if (x2 >= x0 - L / 2 && x2 <= x0 + L / 2) {
-                xhits.push_back(x2);
-                yhits.push_back(y2);
-                zhits.push_back(z2);
-
-                xcells.push_back(x0);
-                ycells.push_back(y0);
-                zcells.push_back(z0);
-            }
+        if (((i > rows*2*layers) && (i < 2*rows*2*layers)) || ((i > 2*rows*3*layers) && (i < 2*rows*4*layers))) {
+            A = ux*ux+uz*uz;
+            B = -2*(ux*xcell[i]+uz*zcell[i]);
+            C = xcell[i]*xcell[i] + zcell[i]*zcell[i] - rCell*rCell;
         }
 
-        if (x2 >= x0 - L / 2 && x2 <= x0 + L / 2) {
-            if (diff2 < diff1) {
-                xhits.push_back(x2);
-                yhits.push_back(y2);
-                zhits.push_back(z2);
+        if (B*B-4*A*C>0) {
 
-                xcells.push_back(x0);
-                ycells.push_back(y0);
-                zcells.push_back(z0);
-            } else if (x1 >= x0 - L / 2 && x1 <= x0 + L / 2) {
-                xhits.push_back(x1);
-                yhits.push_back(y1);
-                zhits.push_back(z1);
+            double t1 = (-B + sqrt(B*B-4*A*C)) / (2 * A);
+            double t2 = (-B - sqrt(B*B-4*A*C)) / (2 * A);
 
-                xcells.push_back(x0);
-                ycells.push_back(y0);
-                zcells.push_back(z0);
+            double diff1,diff2,x,y,z,x1,y1,z1,x2,y2,z2;
+
+            if (t1>0) {
+                x1 = t1 * ux;
+                y1 = t1 * uy;
+                z1 = t1 * uz;
+
+                diff1 = sqrt(x1*x1+y1*y1+z1*z1);
+
             }
+
+            if (t2>0) {
+                x2 = t2 * ux;
+                y2 = t2 * uy;
+                z2 = t2 * uz;
+
+                diff2 = sqrt(x2*x2+y2*y2+z2*z2);
+            }
+
+            if ((diff2>diff1 && diff1!=0)) {x=x1;y=y1;z=z1;}
+            if ((diff2<diff1 && diff2!=0)) {x=x2;y=y2;z=z2;}
+
+            // Draw the box (straws)
+    if (i < rows*2*layers) {
+        if (x>= xcell[i] - L/2 && x<= xcell[i] + L/2) {
+            xhits.push_back(x);
+            xcells.push_back(xcell[i]);
+
+            yhits.push_back(y);
+            ycells.push_back(ycell[i]);
+
+            zhits.push_back(z);
+            zcells.push_back(zcell[i]);
+
+            radius.push_back(sqrt((y-ycell[i])*(y-ycell[i])+(z-zcell[i])*(z-zcell[i])));
+
+            cout<<zcell[i]<<" "<<ycell[i]<<" "<<sqrt((y-ycell[i])*(y-ycell[i])+(z-zcell[i])*(z-zcell[i]))<<" codex"<<endl;
         }
     }
 
-    return std::make_tuple(xhits, yhits, zhits, xcells, ycells, zcells);
+
+
+
+    if ((i > rows*2*layers) && (i < 2*rows*2*layers)) {
+        if (y>= ycell[i] - L/2 && y<= ycell[i] + L/2) {
+            xhits.push_back(x);
+            xcells.push_back(xcell[i]);
+
+            yhits.push_back(y);
+            ycells.push_back(ycell[i]);
+
+            zhits.push_back(z);
+            zcells.push_back(zcell[i]);
+
+            radius.push_back(sqrt((x-xcell[i])*(x-xcell[i])+(z-zcell[i])*(z-zcell[i])));
+
+            cout<<zcell[i]<<" "<<ycell[i]<<" "<<sqrt((x-xcell[i])*(x-xcell[i])+(z-zcell[i])*(z-zcell[i]))<<" codex2"<<endl;
+        }
+    }
+
+       if ( (i > 2*rows*2*layers) && (i < 2*rows*3*layers)) {
+        if (x>= xcell[i] - L/2 && x<= xcell[i] + L/2) {
+            xhits.push_back(x);
+            xcells.push_back(xcell[i]);
+
+            yhits.push_back(y);             //For some reason this one also triggers when hitting the other horizontal layer
+            ycells.push_back(ycell[i]);     //Explored above
+
+            zhits.push_back(z);
+            zcells.push_back(zcell[i]);
+
+            radius.push_back(sqrt((y-ycell[i])*(y-ycell[i])+(z-zcell[i])*(z-zcell[i])));
+
+            cout<<zcell[i]<<" "<<ycell[i]<<" "<<sqrt((y-ycell[i])*(y-ycell[i])+(z-zcell[i])*(z-zcell[i]))<<" codex3"<<endl;
+        }
+    }
+
+    if ((i > 2*rows*3*layers) && (i < 2*rows*4*layers)) {
+        if (y>= ycell[i] - L/2 && y<= ycell[i] + L/2) {
+            xhits.push_back(x);
+            xcells.push_back(xcell[i]);
+
+            yhits.push_back(y);
+            ycells.push_back(ycell[i]);
+
+            zhits.push_back(z);
+            zcells.push_back(zcell[i]);
+
+            radius.push_back(sqrt((x-xcell[i])*(x-xcell[i])+(z-zcell[i])*(z-zcell[i])));
+
+            cout<<zcell[i]<<" "<<ycell[i]<<" "<<sqrt((x-xcell[i])*(x-xcell[i])+(z-zcell[i])*(z-zcell[i]))<<" codex4"<<endl;
+        }
+    }
+
+        }
+        }
+
+    if (xhits.size()<2) {
+
+        xhits.push_back(0);
+        xcells.push_back(0);
+
+        yhits.push_back(0);
+        ycells.push_back(0);
+
+        zhits.push_back(0);
+        zcells.push_back(0);
+    }
+
+
+    return std::make_tuple(xhits, yhits, zhits, xcells, ycells, zcells, radius);
+
 }
 
 int main(int argc, char* argv[]) {
@@ -342,10 +419,10 @@ int main(int argc, char* argv[]) {
 
   auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverse();
 
-  PlotXYCells(xCenter,yCenter);
-  //PlotMidYZ(yCenter,zCenter);
+  //PlotXYCells(xCenter,yCenter);
+  PlotMidYZ(zCenter,yCenter);
 
- std::vector<double> trk_x,trk_y,trk_z, dirvect={1,2,0};//generateDir();
+ std::vector<double> trk_x,trk_y,trk_z, dirvect={0,2,-1.1};//generateDir();
 
   for (double t = 0; t<20; t=t+0.1) {
     trk_x.push_back(dirvect[0]*t);
@@ -353,18 +430,22 @@ int main(int argc, char* argv[]) {
     trk_z.push_back(dirvect[2]*t);
   }
 
-  PlotTrack(trk_x,trk_y);
+  PlotTrack(trk_z,trk_y);
 
-  auto [xhits, yhits, zhits, xcells, ycells, zcells] = hits(dirvect, xCenter, yCenter, zCenter);
+  auto [xhits, yhits, zhits, xcells, ycells, zcells, radius] = hits(dirvect, xCenter, yCenter, zCenter);
+
+  PlotDOCAZY(zcells,ycells,radius);
 
   TGraph *graph = new TGraph();
 
-  for (int i = 0; i < xhits.size(); ++i) {
-        graph->SetPoint(i, xcells[i], ycells[i]); // Add the i-th point
+  for (int i = 0; i < radius.size(); ++i) {
+        graph->SetPoint(i, zhits[i], yhits[i]); // Add the i-th point
+        cout<<zhits[i]<<" "<<yhits[i]<<" "<<radius[i]<<" plot"<<endl;
     }
 
     graph->SetMarkerStyle(20); // Set marker style
     graph->SetMarkerSize(1);   // Set marker size
+    graph->SetMarkerColor(3);   // Set marker size
     graph->SetTitle("Example TGraph;X-axis;Y-axis");
     graph->Draw("same, P");         // "A" for axes, "P" for points
 
