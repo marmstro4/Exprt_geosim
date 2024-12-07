@@ -42,11 +42,13 @@
 
 using namespace Garfield;
 using namespace std;
+using Point3D = array<double, 3>;
+using Matrix3x3 = array<array<double, 3>, 3>;
 
 const double rCell = 0.5;
 double offset = 2.5;
-double length = 12;
-int layers = 10;
+double length = 8;
+int layers = 5;
 int rows = static_cast<int>(length / (2*rCell));
 
 std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersLongitudinal() {
@@ -119,32 +121,25 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
 
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
-            xCenter.push_back(-2*offset);
+            xCenter.push_back(-offset);
             yCenter.push_back(offset+j*2*rCell+rCell);
             zCenter.push_back(i*2*rCell+rCell);
         }
     }
 
-
-
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
             xCenter.push_back(offset+j*2*rCell+rCell);
-            yCenter.push_back(2*offset);
+            yCenter.push_back(offset);
             zCenter.push_back(i*2*rCell+rCell);
-
-
         }
     }
 
-
-
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
-            xCenter.push_back(2*offset);
+            xCenter.push_back(offset);
             yCenter.push_back(-(offset+j*2*rCell+rCell));
             zCenter.push_back(i*2*rCell+rCell);
-
         }
     }
 
@@ -153,9 +148,8 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
             xCenter.push_back(-(offset+j*2*rCell+rCell));
-            yCenter.push_back(-2*offset);
+            yCenter.push_back(-offset);
             zCenter.push_back(i*2*rCell+rCell);
-
         }
     }
 
@@ -168,43 +162,35 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
 
 std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersTransverseSingleOffset() {
 
-    std::vector<double> xCenter, yCenter, zCenter;
-
+     std::vector<double> xCenter, yCenter, zCenter;
 
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
-            xCenter.push_back(-2*offset);
+            xCenter.push_back(-offset);
             yCenter.push_back(offset+j*2*rCell+rCell);
-
+            //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
-
         }
     }
-
-
 
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
             xCenter.push_back(offset+j*2*rCell+rCell);
-            yCenter.push_back(2*offset);
+            yCenter.push_back(offset);
             //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
-
         }
     }
 
-
-
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
-            xCenter.push_back(2*offset);
+            xCenter.push_back(offset);
             yCenter.push_back(-(offset+j*2*rCell+rCell));
-
+            //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
-
         }
     }
 
@@ -213,11 +199,10 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
             xCenter.push_back(-(offset+j*2*rCell+rCell));
-            yCenter.push_back(-2*offset);
+            yCenter.push_back(-offset);
             //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
-
         }
     }
 
@@ -225,52 +210,49 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
 
     return std::make_tuple(xCenter, yCenter, zCenter);
 
+
 }
 
 std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersTransverseDoubleOffset() {
 
     std::vector<double> xCenter, yCenter, zCenter;
 
-
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
-            //xCenter.push_back(-2*offset);
+            //xCenter.push_back(-offset);
             yCenter.push_back(offset+j*2*rCell+rCell);
-
-            if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
-            else {zCenter.push_back(i*2*rCell);}
-
-            if (j%2!=0) {xCenter.push_back(-2*offset-rCell);}
-            else {xCenter.push_back(-2*offset);}
-        }
-    }
-
-
-
-    for (int i = -rows; i<rows; ++i) {
-        for (int j = 0; j<layers; ++j) {
-            xCenter.push_back(offset+j*2*rCell+rCell);
-            //yCenter.push_back(2*offset);
             //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
 
-            if (j%2!=0) {yCenter.push_back(2*offset);}
-            else {yCenter.push_back(2*offset+rCell);}
+            if (j%2!=0) {xCenter.push_back(-offset-rCell);}
+            else {xCenter.push_back(-offset);}
         }
     }
 
+    for (int i = -rows; i<rows; ++i) {
+        for (int j = 0; j<layers; ++j) {
+            xCenter.push_back(offset+j*2*rCell+rCell);
+            //yCenter.push_back(offset);
+            //zCenter.push_back(i*2*rCell+rCell);
+            if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
+            else {zCenter.push_back(i*2*rCell);}
 
+            if (j%2!=0) {yCenter.push_back(offset);}
+            else {yCenter.push_back(offset+rCell);}
+        }
+    }
 
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
-            //xCenter.push_back(2*offset);
+            //xCenter.push_back(offset);
             yCenter.push_back(-(offset+j*2*rCell+rCell));
-
+            //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
-            if (j%2!=0) {xCenter.push_back(2*offset+rCell);}
-            else {xCenter.push_back(2*offset);}
+
+            if (j%2!=0) {xCenter.push_back(offset+rCell);}
+            else {xCenter.push_back(offset);}
         }
     }
 
@@ -279,12 +261,13 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
             xCenter.push_back(-(offset+j*2*rCell+rCell));
-            //yCenter.push_back(-2*offset);
+            //yCenter.push_back(-offset);
             //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
-            if (j%2!=0) {yCenter.push_back(-2*offset);}
-            else {yCenter.push_back(-2*offset-rCell);}
+
+            if (j%2!=0) {yCenter.push_back(-offset);}
+            else {yCenter.push_back(-offset-rCell);}
         }
     }
 
@@ -338,28 +321,28 @@ void PlotXYCells(const std::vector<double>& xCenter, const std::vector<double>& 
 
     // Draw the box (straws)
     for (int i = 0; i < rows*2*layers; ++i) {
-        TBox* straw = new TBox(xCenter[i]-3*offset, yCenter[i]-rCell, xCenter[i]+3*offset, yCenter[i]+rCell);
+        TBox* straw = new TBox(xCenter[i]-2*offset, yCenter[i]-rCell, xCenter[i]+2*offset, yCenter[i]+rCell);
         straw->SetFillStyle(0); // No fill
         straw->SetLineColor(kBlack);
         straw->Draw("same");
     }
 
     for (int i = rows*2*layers; i < 2*rows*2*layers; ++i) {
-        TBox* straw1 = new TBox(xCenter[i]-rCell, yCenter[i]-3*offset, xCenter[i]+rCell, yCenter[i]+3*offset);
+        TBox* straw1 = new TBox(xCenter[i]-rCell, yCenter[i]-length/2-1, xCenter[i]+rCell, yCenter[i]+2*offset);
         straw1->SetFillStyle(0); // No fill
         straw1->SetLineColor(kRed);
         straw1->Draw("same");
     }
 
     for (int i = 2*rows*2*layers; i < 2*rows*3*layers; ++i) {
-        TBox* straw2 = new TBox(xCenter[i]-3*offset, yCenter[i]-rCell, xCenter[i]+3*offset, yCenter[i]+rCell);
+        TBox* straw2 = new TBox(xCenter[i]-2*offset, yCenter[i]-rCell, xCenter[i]+2*offset, yCenter[i]+rCell);
         straw2->SetFillStyle(0); // No fill
         straw2->SetLineColor(kBlue);
         straw2->Draw("same");
     }
 
     for (int i = 2*rows*3*layers; i < 2*rows*4*layers; ++i) {
-        TBox* straw3 = new TBox(xCenter[i]-rCell, yCenter[i]-3*offset, xCenter[i]+rCell, yCenter[i]+3*offset);
+        TBox* straw3 = new TBox(xCenter[i]-rCell, yCenter[i]-2*offset, xCenter[i]+rCell, yCenter[i]+2*offset);
         straw3->SetFillStyle(0); // No fill
         straw3->SetLineColor(kGreen);
         straw3->Draw("same");
@@ -377,6 +360,20 @@ void PlotTrack(std::vector<double> trk_x,std::vector<double> trk_y) {
   // Set the marker style for the points (e.g., a circle)
   graph->SetMarkerStyle(21);  // 21: circle
   graph->SetMarkerColor(kRed);  // Red points
+  graph->SetMarkerSize(3);  // Marker size
+
+  // Draw the graph on the canvas
+  graph->Draw("same");
+
+}
+
+void PlotFit(std::vector<double> trk_x,std::vector<double> trk_y) {
+
+  TGraph* graph = new TGraph(trk_x.size(), trk_x.data(), trk_y.data());
+
+  // Set the marker style for the points (e.g., a circle)
+  graph->SetMarkerStyle(21);  // 21: circle
+  graph->SetLineColor(kBlue);  // Red points
   graph->SetMarkerSize(3);  // Marker size
 
   // Draw the graph on the canvas
@@ -405,16 +402,34 @@ std::vector<double> generateDir() {
 
 }
 
+std::vector<double> generatePos() {
+    // Seed the random number generator
+    srand(static_cast<unsigned>(time(nullptr)));
+
+    static std::random_device rd; // Random device for seeding
+    static std::mt19937 gen(rd()); // Mersenne Twister generator
+    static std::uniform_real_distribution<> dis(0,0.1);
+
+    // Generate uniform random angles
+    double x = dis(gen);
+    double y = dis(gen);
+    double z = dis(gen);
+
+    //cout<<x<<" "<<y<<" "<<z<<endl;
+
+    return {x,y,z};
+
+}
+
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>,
            std::vector<double>, std::vector<double>, std::vector<double>, std::vector<int>>
-hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double> ycell, std::vector<double> zcell) {
+hits(std::vector<double> posvect, std::vector<double> dirvect, std::vector<double> xcell, std::vector<double> ycell, std::vector<double> zcell) {
 
     std::vector<double> xcells, ycells, zcells;
     std::vector<double> xhits, yhits, zhits;
     std::vector<double> radius;
     std::vector<int> axis;
 
-    double L = 15;
     double mag = sqrt(dirvect[0]*dirvect[0]+dirvect[1]*dirvect[1]+dirvect[2]*dirvect[2]);
     double ux = dirvect[0]/mag, uy = dirvect[1]/mag, uz = dirvect[2]/mag;
     double A=0,B=0,C=0;
@@ -424,16 +439,20 @@ hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double>
 
         double diff1,diff2,x,y,z,t,x1,y1,z1,x2,y2,z2;
 
+        double dx = posvect[0]-xcell[i];
+        double dy = posvect[1]-ycell[i];
+        double dz = posvect[2]-zcell[i];
+
         if ((i < rows*2*layers) || (( (i > 2*rows*2*layers) && (i < 2*rows*3*layers)))) {
             A = uz*uz+uy*uy;
-            B = -2*(uz*zcell[i]+uy*ycell[i]);
-            C = zcell[i]*zcell[i] + ycell[i]*ycell[i] - rCell*rCell;
+            B = 2*(dz*uz+dy*uy);
+            C = dz*dz + dy*dy - rCell*rCell;
         }
 
         if (((i > rows*2*layers) && (i < 2*rows*2*layers)) || ((i > 2*rows*3*layers) && (i < 2*rows*4*layers))) {
             A = ux*ux+uz*uz;
-            B = -2*(ux*xcell[i]+uz*zcell[i]);
-            C = xcell[i]*xcell[i] + zcell[i]*zcell[i] - rCell*rCell;
+            B = 2*(dx*ux+dz*uz);
+            C = dx*dx + dz*dz - rCell*rCell;
         }
 
 
@@ -445,23 +464,21 @@ hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double>
 
 
             if (t1>0) {
-                x1 = t1 * ux;
-                y1 = t1 * uy;
-                z1 = t1 * uz;
+                x1 = posvect[0]+ t1*ux;
+                y1 = posvect[1]+ t1*uy;
+                z1 = posvect[2]+ t1*uz;
 
                 diff1 = sqrt(x1*x1+y1*y1+z1*z1);
 
             }
 
             if (t2>0) {
-                x2 = t2 * ux;
-                y2 = t2 * uy;
-                z2 = t2 * uz;
+                x2 = posvect[0]+ t2*ux;
+                y2 = posvect[1]+ t2*uy;
+                z2 = posvect[2]+ t2*uz;
 
                 diff2 = sqrt(x2*x2+y2*y2+z2*z2);
             }
-
-
 
             if ((diff2>diff1 && diff1!=0)) {x=x1;y=y1;z=z1;}
             if ((diff2<diff1 && diff2!=0)) {x=x2;y=y2;z=z2;}
@@ -473,17 +490,17 @@ hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double>
 
             // Draw the box (straws)
     if ((i < rows*2*layers) || ( (i > 2*rows*2*layers) && (i < 2*rows*3*layers))) {
-        if (x>= xcell[i] - L/2 && x<= xcell[i] + L/2) {
+        if (x>= xcell[i] - 2*offset && x<= xcell[i] + 2*offset) {
 
             if (t1>0 && t2>0) {
 
-                xhits.push_back(midx);
+                xhits.push_back(x);
                 xcells.push_back(xcell[i]);
 
-                yhits.push_back(midy);
+                yhits.push_back(y);
                 ycells.push_back(ycell[i]);
 
-                zhits.push_back(midz);
+                zhits.push_back(z);
                 zcells.push_back(zcell[i]);
 
                 radius.push_back(sqrt((midy-ycell[i])*(midy-ycell[i])+(midz-zcell[i])*(midz-zcell[i])));
@@ -498,16 +515,16 @@ hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double>
 
 
     if (((i > rows*2*layers) && (i < 2*rows*2*layers)) || ((i > 2*rows*3*layers) && (i < 2*rows*4*layers))) {
-        if (y>= ycell[i] - L/2 && y<= ycell[i] + L/2) {
+        if (y>= ycell[i] - 2*offset && y<= ycell[i] + 2*offset) {
 
             if (t1>0 && t2>0) {
-                xhits.push_back(midx);
+                xhits.push_back(x);
                 xcells.push_back(xcell[i]);
 
-                yhits.push_back(midy);
+                yhits.push_back(y);
                 ycells.push_back(ycell[i]);
 
-                zhits.push_back(midz);
+                zhits.push_back(z);
                 zcells.push_back(zcell[i]);
 
                 radius.push_back(sqrt((midx-xcell[i])*(midx-xcell[i])+(midz-zcell[i])*(midz-zcell[i])));
@@ -539,6 +556,123 @@ hits(std::vector<double> dirvect, std::vector<double> xcell, std::vector<double>
 
 }
 
+Point3D computeCentroid(const vector<Point3D>& points) {
+    Point3D centroid = {0.0, 0.0, 0.0};
+    for (const auto& point : points) {
+        centroid[0] += point[0];
+        centroid[1] += point[1];
+        centroid[2] += point[2];
+    }
+    centroid[0] /= points.size();
+    centroid[1] /= points.size();
+    centroid[2] /= points.size();
+    return centroid;
+}
+
+Matrix3x3 computeCovariance(const vector<Point3D>& points, const Point3D& centroid) {
+    Matrix3x3 covariance = {{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}};
+
+    for (const auto& point : points) {
+        array<double, 3> centered = {point[0] - centroid[0], point[1] - centroid[1], point[2] - centroid[2]};
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                covariance[i][j] += centered[i] * centered[j];
+            }
+        }
+    }
+
+    // Average the covariance values
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            covariance[i][j] /= points.size();
+        }
+    }
+
+    return covariance;
+}
+
+Point3D findPrincipalEigenvector(const Matrix3x3& matrix, int iterations = 100, double tolerance = 1e-6) {
+    Point3D eigenvector = {1.0, 1.0, 1.0}; // Initial guess
+    double norm;
+
+    for (int iter = 0; iter < iterations; ++iter) {
+        Point3D newVector = {0.0, 0.0, 0.0};
+
+        // Multiply the matrix by the current vector
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                newVector[i] += matrix[i][j] * eigenvector[j];
+            }
+        }
+
+        // Normalize the vector
+        norm = sqrt(newVector[0] * newVector[0] + newVector[1] * newVector[1] + newVector[2] * newVector[2]);
+        for (int i = 0; i < 3; ++i) {
+            newVector[i] /= norm;
+        }
+
+        // Check for convergence
+        if (fabs(newVector[0] - eigenvector[0]) < tolerance &&
+            fabs(newVector[1] - eigenvector[1]) < tolerance &&
+            fabs(newVector[2] - eigenvector[2]) < tolerance) {
+            break;
+        }
+
+        eigenvector = newVector;
+    }
+
+    return eigenvector;
+}
+
+
+std::pair<Point3D,Point3D> FitRadii(std::vector<double> xcells, std::vector<double> zcells,std::vector<double> ycells, std::vector<double>radius, std::vector<int> axis) {
+
+    vector<Point3D> points;
+    for (size_t i = 0; i < xcells.size(); ++i) {
+        points.push_back({xcells[i], ycells[i], zcells[i]});
+    }
+
+    // Step 1: Compute the centroid
+    Point3D centroid = computeCentroid(points);
+
+    // Step 2: Compute the covariance matrix
+    Matrix3x3 covariance = computeCovariance(points, centroid);
+
+    // Step 3: Find the principal eigenvector
+    Point3D direction = findPrincipalEigenvector(covariance);
+
+    cout << "Direction: (" << direction[0] << ", " << direction[1] << ", " << direction[2] << ")" << endl;
+
+    return std::make_pair(direction,centroid);
+
+
+}
+
+Point3D findClosestPointOnLine(const Point3D& centroid, const Point3D& direction, std::vector<double> point) {
+    // Unpack components
+    double xc = centroid[0], yc = centroid[1], zc = centroid[2];
+    double dx = direction[0], dy = direction[1], dz = direction[2];
+    double a = point[0], b = point[1], c = point[2];
+
+    // Compute t
+    double numerator = dx * (a - xc) + dy * (b - yc) + dz * (c - zc);
+    double denominator = dx * dx + dy * dy + dz * dz;
+    if (abs(denominator) < 1e-6) {
+        throw runtime_error("The direction vector is invalid (magnitude is zero).");
+    }
+    double t = numerator / denominator;
+
+    // Compute the closest point
+    Point3D closestPoint = {
+        xc + t * dx, // x-coordinate
+        yc + t * dy, // y-coordinate
+        zc + t * dz  // z-coordinate
+    };
+
+    return closestPoint;
+}
+
+
 
 int main(int argc, char* argv[]) {
 
@@ -549,50 +683,64 @@ int main(int argc, char* argv[]) {
 
   auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverse();
 
-  PlotXYCells(xCenter,yCenter);
-  //PlotMidYZ(zCenter,yCenter);
+  //PlotXYCells(xCenter,yCenter);
+  PlotMidYZ(zCenter,yCenter);
 
-  double count = 0;
+  std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z, dirvect=generateDir(), posvect=generatePos();
+  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect={0.1,2.2,-1.1}, posvect=generatePos();
 
-  //for (double l = -7.5; l<7.5; l++) {
+  //posvect[2] = l;
 
-  for (int i = 0; i<500; i++) {
-
- std::vector<double> trk_x,trk_y,trk_z, dirvect= generateDir();
 
   for (double t = 0; t<20; t=t+0.1) {
-    trk_x.push_back(dirvect[0]*t);
-    trk_y.push_back(dirvect[1]*t);
-    trk_z.push_back(dirvect[2]*t);
+    trk_x.push_back(dirvect[0]*t+posvect[0]);
+    trk_y.push_back(dirvect[1]*t+posvect[1]);
+    trk_z.push_back(dirvect[2]*t+posvect[2]);
   }
 
-  PlotTrack(trk_x,trk_y);
+  PlotTrack(trk_z,trk_y);
 
-  auto [xhits, yhits, zhits, xcells, ycells, zcells, radius, axis] = hits(dirvect, xCenter, yCenter, zCenter);
+  auto [xhits, yhits, zhits, xcells, ycells, zcells, radius, axis] = hits(posvect, dirvect, xCenter, yCenter, zCenter);
 
   TGraph *graph = new TGraph();
 
+  //double rad_avg = 0;
+
   for (int i = 0; i < radius.size(); ++i) {
-        graph->SetPoint(i, xhits[i], yhits[i]); // Add the i-th point
-        cout<<xhits[i]<<" "<<yhits[i]<<" "<<radius[i]<<" plot"<<endl;
+        //rad_avg = radius[i];
+        //graph->SetPoint(i, zhits[i], yhits[i]); // Add the i-th point
+        //cout<<xhits[i]<<" "<<yhits[i]<<" "<<radius[i]<<" plot"<<endl;
     }
 
-    graph->SetMarkerStyle(20); // Set marker style
-    graph->SetMarkerSize(1);   // Set marker size
-    graph->SetMarkerColor(3);   // Set marker size
-    graph->SetTitle("Example TGraph;X-axis;Y-axis");
-    graph->Draw("same, P");
+    //graph->SetMarkerStyle(20); // Set marker style
+    //graph->SetMarkerSize(1);   // Set marker size
+    //graph->SetMarkerColor(3);   // Set marker size
+    //graph->SetTitle("Example TGraph;X-axis;Y-axis");
+    //graph->Draw("same, P");
 
-    if (xhits.size()>2) {
-      count=count+1;
+    if (xhits.size()>1) {
+      //count=count+rad_avg/xhits.size();
     }
 
-  }
+    PlotDOCAZY(zcells,ycells,radius);
 
-  cout<<count/500<<endl;
+    //This function does not work well
+    auto [fitvec, fitcent] = FitRadii(xcells,ycells,zcells,radius,axis);
+    PlotFit(fit_z,fit_y);
+
+    Point3D reco_v = findClosestPointOnLine(fitcent,fitvec,posvect);
+
+    cout << "Closest point on the line: ("<< reco_v[0] << ", " << reco_v[1] << ", " << reco_v[2] << ") mag = " <<sqrt(reco_v[0]*reco_v[0]+reco_v[1]*reco_v[1]+reco_v[2]*reco_v[2])<<endl;
+
+
+  //}
+
+  //cout<<count/500<<endl;
 
 
 //}
+
+    //cout<<xCenter.size()<<endl;
 
 
   app.Run();
