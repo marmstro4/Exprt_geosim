@@ -51,6 +51,33 @@ double length = 8;
 int layers = 5;
 int rows = static_cast<int>(length / (2*rCell));
 
+TH1F* reco_Z = new TH1F("reco_Z","reco_Z",1000,-50,50);
+
+struct Cylinder {
+    double a, b, c;  // Center position (a, b, c)
+    double r;        // Radius
+    double L;        // Length
+    int mod;         // Module
+
+    // Constructor
+    Cylinder(double x, double y, double z, double radius, double length, int stack)
+        : a(x), b(y), c(z), r(radius), L(length), mod(stack) {}
+};
+
+double randomiser(double radius) {
+    static std::random_device rd; // Random device for seeding
+    static std::mt19937 gen(rd()); // Mersenne Twister generator
+    static std::uniform_real_distribution<> dis(0.9,1.1);
+
+    double rad = dis(gen);
+
+    if (rad*0.5>1) {rad=1;}
+
+    return rad*0.5;
+}
+
+
+
 std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersLongitudinal() {
 
     std::vector<double> xCenter, yCenter, zCenter;
@@ -408,7 +435,7 @@ std::vector<double> generatePos() {
 
     static std::random_device rd; // Random device for seeding
     static std::mt19937 gen(rd()); // Mersenne Twister generator
-    static std::uniform_real_distribution<> dis(0,0.1);
+    static std::uniform_real_distribution<> dis(0,0.3);
 
     // Generate uniform random angles
     double x = dis(gen);
@@ -505,13 +532,14 @@ hits(std::vector<double> posvect, std::vector<double> dirvect, std::vector<doubl
 
                 radius.push_back(sqrt((midy-ycell[i])*(midy-ycell[i])+(midz-zcell[i])*(midz-zcell[i])));
 
-                axis.push_back(0); //Horizontal axis
+                if (i < rows*2*layers) {axis.push_back(0);}
+                if ((i > 2*rows*2*layers) && (i < 2*rows*3*layers)) {axis.push_back(2);}
+                }
 
                 //cout<<x<<" "<<y<<" "<<z<<" "<<t1<<" "<<t2<<" "<<xcell[i]<<" "<<ycell[i]<<" "<<zcell[i]<<" "<<sqrt((y-ycell[i])*(y-ycell[i])+(z-zcell[i])*(z-zcell[i]))<<" "<<i<<" codex"<<endl;
 
             }
         }
-    }
 
 
     if (((i > rows*2*layers) && (i < 2*rows*2*layers)) || ((i > 2*rows*3*layers) && (i < 2*rows*4*layers))) {
@@ -529,14 +557,14 @@ hits(std::vector<double> posvect, std::vector<double> dirvect, std::vector<doubl
 
                 radius.push_back(sqrt((midx-xcell[i])*(midx-xcell[i])+(midz-zcell[i])*(midz-zcell[i])));
 
-                axis.push_back(1); //Vertical axis
-
+                if ((i > rows*2*layers) && (i < 2*rows*2*layers)) {axis.push_back(1);}
+                if ((i > 2*rows*3*layers) && (i < 2*rows*4*layers)) {axis.push_back(3);}
+            }
                 //cout<<x<<" "<<y<<" "    <<z<<" "<<t1<<" "<<t2<<" "<<xcell[i]<<" "<<ycell[i]<<" "<<zcell[i]<<" "<<sqrt((y-ycell[i])*(y-                                              ycell[i])+(z-zcell[i])*(z-zcell[i]))<<" "<<i<<" codex 2"<<endl;
             }
         }
     }
 
-        }
         }
 
     if (xhits.size()<2) {
@@ -556,95 +584,111 @@ hits(std::vector<double> posvect, std::vector<double> dirvect, std::vector<doubl
 
 }
 
-Point3D computeCentroid(const vector<Point3D>& points) {
-    Point3D centroid = {0.0, 0.0, 0.0};
-    for (const auto& point : points) {
-        centroid[0] += point[0];
-        centroid[1] += point[1];
-        centroid[2] += point[2];
+double linetocylinder(const double* params, Cylinder cylinder) {
+
+    double x0 = params[0], y0 = params[1], z0 = params[2];  // Line origin
+    double ux = params[3], uy = params[4], uz = params[5];  // Unit direction vector
+
+    // Ensure the direction vector is normalized
+    double norm = std::sqrt(ux * ux + uy * uy + uz * uz);
+    ux /= norm; uy /= norm; uz /= norm;
+
+    // Parametric line: p(t) = (x0 + t*ux, y0 + t*uy, z0 + t*uz)
+    // Project the cylinder center onto the line
+    double a = cylinder.a, b = cylinder.b, c = cylinder.c, r = cylinder.r, L = cylinder.L;
+    int modu = cylinder.mod;
+
+    double t = (a - x0) * ux + (b - y0) * uy + (c - z0) * uz;
+
+    // Closest point on the line
+    double px = x0 + t * ux;
+    double py = y0 + t * uy;
+    double pz = z0 + t * uz;
+
+    double radial_distance;
+
+    if (modu==0 || modu==2) {
+        // Distance along the cylinder axis (x-axis)
+        double dx = px - a;
+        if (std::abs(dx) > L / 2) {
+            // If out of cylinder bounds, penalize
+            return 1e9;
+        }
+
+        // Perpendicular distance to the cylinder's surface
+        double dy = py - b;
+        double dz = pz - c;
+        radial_distance = std::sqrt(dy * dy + dz * dz);
+
     }
-    centroid[0] /= points.size();
-    centroid[1] /= points.size();
-    centroid[2] /= points.size();
-    return centroid;
+
+    if (modu==1 || modu==3) {
+        // Distance along the cylinder axis (x-axis)
+        double dy = py - b;
+        if (std::abs(dy) > L / 2) {
+            // If out of cylinder bounds, penalize
+            return 1e9;
+        }
+
+        // Perpendicular distance to the cylinder's surface
+        double dx = px - b;
+        double dz = pz - c;
+        radial_distance = std::sqrt(dx * dx + dz * dz);
+
+    }
+
+    // Return the squared difference from the radius
+    return (radial_distance - r) * (radial_distance - r);
 }
 
-Matrix3x3 computeCovariance(const vector<Point3D>& points, const Point3D& centroid) {
-    Matrix3x3 covariance = {{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}};
+double FitFunction(const double* params, const std::vector<Cylinder>& cylinders) {
 
-    for (const auto& point : points) {
-        array<double, 3> centered = {point[0] - centroid[0], point[1] - centroid[1], point[2] - centroid[2]};
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                covariance[i][j] += centered[i] * centered[j];
-            }
-        }
+    double x0 = params[0], y0 = params[1];
+    double penalty = 0.0;
+
+    // Add penalties for violating the constraints
+    if (x0 < -0.1 || x0 > 0.1) penalty += 1e9 * (std::abs(x0) - 0.3);
+    if (y0 < -0.1 || y0 > 0.1) penalty += 1e9 * (std::abs(y0) - 0.3);
+
+    double sum = 0.0;
+    for (const auto& cylinder : cylinders) {
+        sum += linetocylinder(params, cylinder);
     }
-
-    // Average the covariance values
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            covariance[i][j] /= points.size();
-        }
-    }
-
-    return covariance;
-}
-
-Point3D findPrincipalEigenvector(const Matrix3x3& matrix, int iterations = 100, double tolerance = 1e-6) {
-    Point3D eigenvector = {1.0, 1.0, 1.0}; // Initial guess
-    double norm;
-
-    for (int iter = 0; iter < iterations; ++iter) {
-        Point3D newVector = {0.0, 0.0, 0.0};
-
-        // Multiply the matrix by the current vector
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                newVector[i] += matrix[i][j] * eigenvector[j];
-            }
-        }
-
-        // Normalize the vector
-        norm = sqrt(newVector[0] * newVector[0] + newVector[1] * newVector[1] + newVector[2] * newVector[2]);
-        for (int i = 0; i < 3; ++i) {
-            newVector[i] /= norm;
-        }
-
-        // Check for convergence
-        if (fabs(newVector[0] - eigenvector[0]) < tolerance &&
-            fabs(newVector[1] - eigenvector[1]) < tolerance &&
-            fabs(newVector[2] - eigenvector[2]) < tolerance) {
-            break;
-        }
-
-        eigenvector = newVector;
-    }
-
-    return eigenvector;
+    return sum + penalty;
 }
 
 
-std::pair<Point3D,Point3D> FitRadii(std::vector<double> xcells, std::vector<double> zcells,std::vector<double> ycells, std::vector<double>radius, std::vector<int> axis) {
+std::pair<Point3D,Point3D> FitRadii(std::vector<Cylinder> cylinders) {
 
-    vector<Point3D> points;
-    for (size_t i = 0; i < xcells.size(); ++i) {
-        points.push_back({xcells[i], ycells[i], zcells[i]});
-    }
+    double initialParams[6] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+    auto minimizer = ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
-    // Step 1: Compute the centroid
-    Point3D centroid = computeCentroid(points);
+    ROOT::Math::Functor func([&](const double* params) {
+        return FitFunction(params, cylinders);}, 6);
+    minimizer->SetFunction(func);
 
-    // Step 2: Compute the covariance matrix
-    Matrix3x3 covariance = computeCovariance(points, centroid);
+    // Set initial values and parameter step sizes
+    minimizer->SetVariable(0, "x0", initialParams[0], 0.1);
+    minimizer->SetVariable(1, "y0", initialParams[1], 0.1);
+    minimizer->SetVariable(2, "z0", initialParams[2], 0.1);
+    minimizer->SetVariable(3, "ux", initialParams[3], 0.01);
+    minimizer->SetVariable(4, "uy", initialParams[4], 0.01);
+    minimizer->SetVariable(5, "uz", initialParams[5], 0.01);
 
-    // Step 3: Find the principal eigenvector
-    Point3D direction = findPrincipalEigenvector(covariance);
+    // Perform the minimization
+    minimizer->Minimize();
 
-    cout << "Direction: (" << direction[0] << ", " << direction[1] << ", " << direction[2] << ")" << endl;
+    // Retrieve results
+    const double* results = minimizer->X();
+    //std::cout << "Fitted line parameters:" << std::endl;
+
+    //std::cout << "Origin: (" << results[0] << ", " << results[1] << ", " << results[2] << ")" << std::endl;
+    //std::cout << "Direction: (" << results[3] << ", " << results[4] << ", " << results[5] << ")" << std::endl;
+
+    Point3D centroid = {results[0],results[1],results[2]};
+    Point3D direction = {results[3],results[4],results[5]};
 
     return std::make_pair(direction,centroid);
-
 
 }
 
@@ -653,20 +697,26 @@ Point3D findClosestPointOnLine(const Point3D& centroid, const Point3D& direction
     double xc = centroid[0], yc = centroid[1], zc = centroid[2];
     double dx = direction[0], dy = direction[1], dz = direction[2];
     double a = point[0], b = point[1], c = point[2];
+    float dist = 99999;
+    double tmin = 0;
 
-    // Compute t
-    double numerator = dx * (a - xc) + dy * (b - yc) + dz * (c - zc);
-    double denominator = dx * dx + dy * dy + dz * dz;
-    if (abs(denominator) < 1e-6) {
-        throw runtime_error("The direction vector is invalid (magnitude is zero).");
+    for (double t=-20; t<20; t=t+0.01) {
+        float x = xc+t*dx;
+        float y = yc+t*dy;
+        float z = zc+t*dz;
+        float diff = sqrt(pow(x-a,2)+pow(y-b,2)+pow(z-c,2));
+
+        if (diff<dist) {
+            tmin = t;
+            dist=diff;
+        }
     }
-    double t = numerator / denominator;
 
     // Compute the closest point
     Point3D closestPoint = {
-        xc + t * dx, // x-coordinate
-        yc + t * dy, // y-coordinate
-        zc + t * dz  // z-coordinate
+        xc + tmin * dx, // x-coordinate
+        yc + tmin * dy, // y-coordinate
+        zc + tmin * dz  // z-coordinate
     };
 
     return closestPoint;
@@ -675,22 +725,19 @@ Point3D findClosestPointOnLine(const Point3D& centroid, const Point3D& direction
 
 
 int main(int argc, char* argv[]) {
-
-  //I need to check the algorithm for the cylinder intersection... can probably solve 2D
-  //Then check if within length
-
   TApplication app("app", &argc, argv);
 
   auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverse();
 
   //PlotXYCells(xCenter,yCenter);
-  PlotMidYZ(zCenter,yCenter);
+  //PlotMidYZ(zCenter,yCenter);
+
+  for (int f=0; f<50000; f++) {
 
   std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z, dirvect=generateDir(), posvect=generatePos();
-  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect={0.1,2.2,-1.1}, posvect=generatePos();
+  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect={1.1,0.1,0.01}, posvect=generatePos();
 
   //posvect[2] = l;
-
 
   for (double t = 0; t<20; t=t+0.1) {
     trk_x.push_back(dirvect[0]*t+posvect[0]);
@@ -698,7 +745,7 @@ int main(int argc, char* argv[]) {
     trk_z.push_back(dirvect[2]*t+posvect[2]);
   }
 
-  PlotTrack(trk_z,trk_y);
+  //PlotTrack(trk_x,trk_y);
 
   auto [xhits, yhits, zhits, xcells, ycells, zcells, radius, axis] = hits(posvect, dirvect, xCenter, yCenter, zCenter);
 
@@ -707,32 +754,50 @@ int main(int argc, char* argv[]) {
   //double rad_avg = 0;
 
   for (int i = 0; i < radius.size(); ++i) {
-        //rad_avg = radius[i];
-        //graph->SetPoint(i, zhits[i], yhits[i]); // Add the i-th point
+        radius[i] = randomiser(radius[i]);
+    graph->SetPoint(i, xhits[i], yhits[i]); // Add the i-th point
         //cout<<xhits[i]<<" "<<yhits[i]<<" "<<radius[i]<<" plot"<<endl;
     }
 
-    //graph->SetMarkerStyle(20); // Set marker style
-    //graph->SetMarkerSize(1);   // Set marker size
-    //graph->SetMarkerColor(3);   // Set marker size
-    //graph->SetTitle("Example TGraph;X-axis;Y-axis");
-    //graph->Draw("same, P");
+    graph->SetMarkerStyle(20); // Set marker style
+    graph->SetMarkerSize(1);   // Set marker size
+    graph->SetMarkerColor(3);   // Set marker size
+    graph->SetTitle("Example TGraph;X-axis;Y-axis");
+    graph->Draw("same, P");
 
     if (xhits.size()>1) {
       //count=count+rad_avg/xhits.size();
     }
 
-    PlotDOCAZY(zcells,ycells,radius);
+    //PlotDOCAZY(xcells,ycells,radius);
 
+    std::vector<Cylinder> cylinders;
+
+    for (int i = 0; i<radius.size(); i++) {
+        Cylinder cyl(xcells[i], ycells[i], zcells[i], radius[i], length, axis[i]);
+        cylinders.push_back(cyl);
+    }
     //This function does not work well
-    auto [fitvec, fitcent] = FitRadii(xcells,ycells,zcells,radius,axis);
-    PlotFit(fit_z,fit_y);
+    auto [fitvec, fitcent] = FitRadii(cylinders);
+
+    for (double t = -20; t<20; t=t+0.1) {
+    fit_x.push_back(fitvec[0]*t+fitcent[0]);
+    fit_y.push_back(fitvec[1]*t+fitcent[1]);
+    fit_z.push_back(fitvec[2]*t+fitcent[2]);
+  }
+
+    //PlotFit(fit_x,fit_y);
 
     Point3D reco_v = findClosestPointOnLine(fitcent,fitvec,posvect);
 
-    cout << "Closest point on the line: ("<< reco_v[0] << ", " << reco_v[1] << ", " << reco_v[2] << ") mag = " <<sqrt(reco_v[0]*reco_v[0]+reco_v[1]*reco_v[1]+reco_v[2]*reco_v[2])<<endl;
+    //cout << "Closest point on the line: ("<< reco_v[0] << ", " << reco_v[1] << ", " << reco_v[2] << ") mag = " <<sqrt(reco_v[0]*reco_v[0]+reco_v[1]*reco_v[1]+reco_v[2]*reco_v[2])<<endl;
+    cout<<f<<" "<<reco_v[2]-posvect[2]<<endl;
+    reco_Z->Fill(10*(reco_v[2]-posvect[2]));
+
+  }
 
 
+  reco_Z->Draw("hist");
   //}
 
   //cout<<count/500<<endl;
