@@ -48,10 +48,13 @@ using Matrix3x3 = array<array<double, 3>, 3>;
 const double rCell = 0.5;
 double offset = 2.5;
 double length = 8;
+double sig = 0;
 int layers = 5;
 int rows = static_cast<int>(length / (2*rCell));
 
-TH1F* reco_Z = new TH1F("reco_Z","reco_Z",1000,-50,50);
+
+
+TH2F* pos_z = new TH2F("pos_z","pos_z",30,-7.5,7.5,10,-2.5,2.5);
 
 struct Cylinder {
     double a, b, c;  // Center position (a, b, c)
@@ -71,12 +74,9 @@ double randomiser(double radius) {
 
     double rad = dis(gen);
 
-    if (rad*0.5>1) {rad=1;}
-
-    return rad*0.5;
+    if (rad*radius>rCell) {return rCell;}
+    else {return rad*radius;}
 }
-
-
 
 std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersLongitudinal() {
 
@@ -186,7 +186,6 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
 
 }
 
-
 std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersTransverseSingleOffset() {
 
      std::vector<double> xCenter, yCenter, zCenter;
@@ -288,10 +287,74 @@ std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStra
     for (int i = -rows; i<rows; ++i) {
         for (int j = 0; j<layers; ++j) {
             xCenter.push_back(-(offset+j*2*rCell+rCell));
-            //yCenter.push_back(-offset);
+            yCenter.push_back(-offset);
             //zCenter.push_back(i*2*rCell+rCell);
             if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
             else {zCenter.push_back(i*2*rCell);}
+
+            if (j%2!=0) {yCenter.push_back(-offset);}
+            else {yCenter.push_back(-offset-rCell);}
+        }
+    }
+
+
+
+    return std::make_tuple(xCenter, yCenter, zCenter);
+
+}
+
+std::tuple<std::vector<double>, std::vector<double>,std::vector<double>> GetStrawCentersTransverseXYOffset() {
+
+    std::vector<double> xCenter, yCenter, zCenter;
+
+    for (int i = -rows; i<rows; ++i) {
+        for (int j = 0; j<layers; ++j) {
+            //xCenter.push_back(-offset);
+            yCenter.push_back(offset+j*2*rCell+rCell);
+            zCenter.push_back(i*2*rCell+rCell);
+            //if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
+            //else {zCenter.push_back(i*2*rCell);}
+
+            if (j%2!=0) {xCenter.push_back(-offset-rCell);}
+            else {xCenter.push_back(-offset);}
+        }
+    }
+
+    for (int i = -rows; i<rows; ++i) {
+        for (int j = 0; j<layers; ++j) {
+            xCenter.push_back(offset+j*2*rCell+rCell);
+            //yCenter.push_back(offset);
+            zCenter.push_back(i*2*rCell+rCell);
+            //if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
+            //else {zCenter.push_back(i*2*rCell);}
+
+            if (j%2!=0) {yCenter.push_back(offset);}
+            else {yCenter.push_back(offset+rCell);}
+        }
+    }
+
+    for (int i = -rows; i<rows; ++i) {
+        for (int j = 0; j<layers; ++j) {
+            //xCenter.push_back(offset);
+            yCenter.push_back(-(offset+j*2*rCell+rCell));
+            zCenter.push_back(i*2*rCell+rCell);
+            //if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
+            //else {zCenter.push_back(i*2*rCell);}
+
+            if (j%2!=0) {xCenter.push_back(offset+rCell);}
+            else {xCenter.push_back(offset);}
+        }
+    }
+
+
+
+    for (int i = -rows; i<rows; ++i) {
+        for (int j = 0; j<layers; ++j) {
+            xCenter.push_back(-(offset+j*2*rCell+rCell));
+            yCenter.push_back(-offset);
+            //zCenter.push_back(i*2*rCell+rCell);
+            //if (j%2==0) {zCenter.push_back(i*2*rCell+rCell);}
+            //else {zCenter.push_back(i*2*rCell);}
 
             if (j%2!=0) {yCenter.push_back(-offset);}
             else {yCenter.push_back(-offset-rCell);}
@@ -647,8 +710,8 @@ double FitFunction(const double* params, const std::vector<Cylinder>& cylinders)
     double penalty = 0.0;
 
     // Add penalties for violating the constraints
-    if (x0 < -0.1 || x0 > 0.1) penalty += 1e9 * (std::abs(x0) - 0.3);
-    if (y0 < -0.1 || y0 > 0.1) penalty += 1e9 * (std::abs(y0) - 0.3);
+    if (x0 < -0.3 || x0 > 0.3) penalty += 1e9 * (std::abs(x0) - 0.3);
+    if (y0 < -0.3 || y0 > 0.3) penalty += 1e9 * (std::abs(y0) - 0.3);
 
     double sum = 0.0;
     for (const auto& cylinder : cylinders) {
@@ -658,9 +721,9 @@ double FitFunction(const double* params, const std::vector<Cylinder>& cylinders)
 }
 
 
-std::pair<Point3D,Point3D> FitRadii(std::vector<Cylinder> cylinders) {
+std::pair<Point3D,Point3D> FitRadii(std::vector<Cylinder> cylinders, std::vector<double> first) {
 
-    double initialParams[6] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+    double initialParams[6] = {first[0], first[1], first[2], 0, 0, 1};
     auto minimizer = ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
     ROOT::Math::Functor func([&](const double* params) {
@@ -668,12 +731,12 @@ std::pair<Point3D,Point3D> FitRadii(std::vector<Cylinder> cylinders) {
     minimizer->SetFunction(func);
 
     // Set initial values and parameter step sizes
-    minimizer->SetVariable(0, "x0", initialParams[0], 0.1);
-    minimizer->SetVariable(1, "y0", initialParams[1], 0.1);
-    minimizer->SetVariable(2, "z0", initialParams[2], 0.1);
-    minimizer->SetVariable(3, "ux", initialParams[3], 0.01);
-    minimizer->SetVariable(4, "uy", initialParams[4], 0.01);
-    minimizer->SetVariable(5, "uz", initialParams[5], 0.01);
+    minimizer->SetVariable(0, "x0", initialParams[0], 2);
+    minimizer->SetVariable(1, "y0", initialParams[1], 2);
+    minimizer->SetVariable(2, "z0", initialParams[2], 2);
+    minimizer->SetVariable(3, "ux", initialParams[3], 0.1);
+    minimizer->SetVariable(4, "uy", initialParams[4], 0.1);
+    minimizer->SetVariable(5, "uz", initialParams[5], 0.1);
 
     // Perform the minimization
     minimizer->Minimize();
@@ -722,48 +785,54 @@ Point3D findClosestPointOnLine(const Point3D& centroid, const Point3D& direction
     return closestPoint;
 }
 
-
-
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
-  auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverse();
+  auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverseXYOffset();
 
   //PlotXYCells(xCenter,yCenter);
   //PlotMidYZ(zCenter,yCenter);
 
-  for (int f=0; f<50000; f++) {
+  //for (double k = -7.5; k<7.5; k=k+0.5) {
+
+  //for (double h = -offset; h<offset; h=h+0.5) {
+
+    TH1F* reco_Z = new TH1F("reco_Z","reco_Z",1000,-500,500);
+
+  for (int f=0; f<5000; f++) {
+
 
   std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z, dirvect=generateDir(), posvect=generatePos();
-  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect={1.1,0.1,0.01}, posvect=generatePos();
+  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect=generateDir(), posvect={0,0,-7.5};
 
-  //posvect[2] = l;
+  //posvect[1] = h;
+  //posvect[2] = k;
 
-  for (double t = 0; t<20; t=t+0.1) {
-    trk_x.push_back(dirvect[0]*t+posvect[0]);
-    trk_y.push_back(dirvect[1]*t+posvect[1]);
-    trk_z.push_back(dirvect[2]*t+posvect[2]);
-  }
+  //for (double t = 0; t<20; t=t+0.1) {
+    //trk_x.push_back(dirvect[0]*t+posvect[0]);
+    //trk_y.push_back(dirvect[1]*t+posvect[1]);
+    //trk_z.push_back(dirvect[2]*t+posvect[2]);
+  //}
 
-  //PlotTrack(trk_x,trk_y);
+  //PlotTrack(trk_z,trk_y);
 
   auto [xhits, yhits, zhits, xcells, ycells, zcells, radius, axis] = hits(posvect, dirvect, xCenter, yCenter, zCenter);
 
-  TGraph *graph = new TGraph();
+  //TGraph *graph = new TGraph();
 
   //double rad_avg = 0;
 
   for (int i = 0; i < radius.size(); ++i) {
         radius[i] = randomiser(radius[i]);
-    graph->SetPoint(i, xhits[i], yhits[i]); // Add the i-th point
+    //graph->SetPoint(i, zhits[i], yhits[i]); // Add the i-th point
         //cout<<xhits[i]<<" "<<yhits[i]<<" "<<radius[i]<<" plot"<<endl;
     }
 
-    graph->SetMarkerStyle(20); // Set marker style
-    graph->SetMarkerSize(1);   // Set marker size
-    graph->SetMarkerColor(3);   // Set marker size
-    graph->SetTitle("Example TGraph;X-axis;Y-axis");
-    graph->Draw("same, P");
+    //graph->SetMarkerStyle(20); // Set marker style
+    //graph->SetMarkerSize(1);   // Set marker size
+    //graph->SetMarkerColor(3);   // Set marker size
+    //graph->SetTitle("Example TGraph;X-axis;Y-axis");
+    //graph->Draw("same, P");
 
     if (xhits.size()>1) {
       //count=count+rad_avg/xhits.size();
@@ -772,13 +841,24 @@ int main(int argc, char* argv[]) {
     //PlotDOCAZY(xcells,ycells,radius);
 
     std::vector<Cylinder> cylinders;
+    std::vector<double> first = {0,0,1};
+    double min = 9999;
 
     for (int i = 0; i<radius.size(); i++) {
         Cylinder cyl(xcells[i], ycells[i], zcells[i], radius[i], length, axis[i]);
         cylinders.push_back(cyl);
+
+        double diff = sqrt(xcells[i]*xcells[i]+ycells[i]*ycells[i]+zcells[i]*zcells[i]);
+        if (diff<min) {
+            min = diff;
+            first[0] = xcells[i];
+            first[1] = ycells[i];
+            first[2] = zcells[i];
+        }
+
     }
     //This function does not work well
-    auto [fitvec, fitcent] = FitRadii(cylinders);
+    auto [fitvec, fitcent] = FitRadii(cylinders,first);
 
     for (double t = -20; t<20; t=t+0.1) {
     fit_x.push_back(fitvec[0]*t+fitcent[0]);
@@ -786,17 +866,40 @@ int main(int argc, char* argv[]) {
     fit_z.push_back(fitvec[2]*t+fitcent[2]);
   }
 
-    //PlotFit(fit_x,fit_y);
+    //PlotFit(fit_z,fit_y);
 
     Point3D reco_v = findClosestPointOnLine(fitcent,fitvec,posvect);
 
     //cout << "Closest point on the line: ("<< reco_v[0] << ", " << reco_v[1] << ", " << reco_v[2] << ") mag = " <<sqrt(reco_v[0]*reco_v[0]+reco_v[1]*reco_v[1]+reco_v[2]*reco_v[2])<<endl;
-    cout<<f<<" "<<reco_v[2]-posvect[2]<<endl;
+    //cout<<f<<" "<<reco_v[2]-posvect[2]<<endl;
     reco_Z->Fill(10*(reco_v[2]-posvect[2]));
+
+
 
   }
 
+  TF1* gaussian = new TF1("gaussian", "gaus", -4, 4);
 
+  // Fit the histogram with the Gaussian function
+  reco_Z->Fit(gaussian, "R"); // "R" ensures fitting within the specified range
+
+
+    // Get the width (sigma) from the fit
+    sig = gaussian->GetParameter(2);
+
+    //std::ofstream outfile("out.dat", std::ios::app);
+
+    //outfile<<k<<","<<h<<","<<sig<<endl;
+
+    //outfile.close();
+
+    //delete reco_Z;
+
+  //}
+
+  //}
+
+  //pos_z->Draw("");
   reco_Z->Draw("hist");
   //}
 
