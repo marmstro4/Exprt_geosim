@@ -788,58 +788,44 @@ Point3D findClosestPointOnLine(const Point3D& centroid, const Point3D& direction
 int main(int argc, char* argv[]) {
   TApplication app("app", &argc, argv);
 
-  auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverseXYOffset();
+  //Generate straws
+  auto [xCenter,yCenter,zCenter] = GetStrawCentersTransverse();
 
+  //Plot straw array
   //PlotXYCells(xCenter,yCenter);
-  //PlotMidYZ(zCenter,yCenter);
+  PlotMidYZ(zCenter,yCenter);
 
-  //for (double k = -7.5; k<7.5; k=k+0.5) {
+  //Generate and plot proton track
+  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z, dirvect=generateDir(), posvect=generatePos();
+  std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect={0,1,-1}, posvect={0.1,0.1,0.1};
 
-  //for (double h = -offset; h<offset; h=h+0.5) {
+  for (double t = 0; t<20; t=t+0.1) {
+    trk_x.push_back(dirvect[0]*t+posvect[0]);
+    trk_y.push_back(dirvect[1]*t+posvect[1]);
+    trk_z.push_back(dirvect[2]*t+posvect[2]);
+  }
+  PlotTrack(trk_z,trk_y);
 
-    TH1F* reco_Z = new TH1F("reco_Z","reco_Z",1000,-500,500);
 
-  for (int f=0; f<5000; f++) {
-
-
-  std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z, dirvect=generateDir(), posvect=generatePos();
-  //std::vector<double> trk_x,trk_y,trk_z,fit_x,fit_y,fit_z,dirvect=generateDir(), posvect={0,0,-7.5};
-
-  //posvect[1] = h;
-  //posvect[2] = k;
-
-  //for (double t = 0; t<20; t=t+0.1) {
-    //trk_x.push_back(dirvect[0]*t+posvect[0]);
-    //trk_y.push_back(dirvect[1]*t+posvect[1]);
-    //trk_z.push_back(dirvect[2]*t+posvect[2]);
-  //}
-
-  //PlotTrack(trk_z,trk_y);
-
+  //Determine hits
   auto [xhits, yhits, zhits, xcells, ycells, zcells, radius, axis] = hits(posvect, dirvect, xCenter, yCenter, zCenter);
 
-  //TGraph *graph = new TGraph();
-
-  //double rad_avg = 0;
+  //Plot Hits, randomise DOCA 10%, plot DOCA
+  TGraph *graph = new TGraph();
+  graph->SetMarkerStyle(20); // Set marker style
+  graph->SetMarkerSize(1);   // Set marker size
+  graph->SetMarkerColor(3);   // Set marker size
+  graph->SetTitle("Example TGraph;X-axis;Y-axis");
 
   for (int i = 0; i < radius.size(); ++i) {
         radius[i] = randomiser(radius[i]);
-    //graph->SetPoint(i, zhits[i], yhits[i]); // Add the i-th point
-        //cout<<xhits[i]<<" "<<yhits[i]<<" "<<radius[i]<<" plot"<<endl;
+        graph->SetPoint(i, zhits[i], yhits[i]);
     }
 
-    //graph->SetMarkerStyle(20); // Set marker style
-    //graph->SetMarkerSize(1);   // Set marker size
-    //graph->SetMarkerColor(3);   // Set marker size
-    //graph->SetTitle("Example TGraph;X-axis;Y-axis");
-    //graph->Draw("same, P");
+    graph->Draw("same, P");
+    PlotDOCAZY(zcells,ycells,radius);
 
-    if (xhits.size()>1) {
-      //count=count+rad_avg/xhits.size();
-    }
-
-    //PlotDOCAZY(xcells,ycells,radius);
-
+    //Pack hits into cylinder objects and initalise track fitting algorithm
     std::vector<Cylinder> cylinders;
     std::vector<double> first = {0,0,1};
     double min = 9999;
@@ -857,59 +843,19 @@ int main(int argc, char* argv[]) {
         }
 
     }
-    //This function does not work well
+
+    //Fit cylinders
     auto [fitvec, fitcent] = FitRadii(cylinders,first);
 
-    for (double t = -20; t<20; t=t+0.1) {
-    fit_x.push_back(fitvec[0]*t+fitcent[0]);
-    fit_y.push_back(fitvec[1]*t+fitcent[1]);
-    fit_z.push_back(fitvec[2]*t+fitcent[2]);
-  }
-
-    //PlotFit(fit_z,fit_y);
+    //Plot fitted track
+    for (double t = 0; t<20; t=t+0.1) {
+        fit_x.push_back(fitvec[0]*t+fitcent[0]);
+        fit_y.push_back(fitvec[1]*t+fitcent[1]);
+        fit_z.push_back(fitvec[2]*t+fitcent[2]);
+    }
 
     Point3D reco_v = findClosestPointOnLine(fitcent,fitvec,posvect);
-
-    //cout << "Closest point on the line: ("<< reco_v[0] << ", " << reco_v[1] << ", " << reco_v[2] << ") mag = " <<sqrt(reco_v[0]*reco_v[0]+reco_v[1]*reco_v[1]+reco_v[2]*reco_v[2])<<endl;
-    //cout<<f<<" "<<reco_v[2]-posvect[2]<<endl;
-    reco_Z->Fill(10*(reco_v[2]-posvect[2]));
-
-
-
-  }
-
-  TF1* gaussian = new TF1("gaussian", "gaus", -4, 4);
-
-  // Fit the histogram with the Gaussian function
-  reco_Z->Fit(gaussian, "R"); // "R" ensures fitting within the specified range
-
-
-    // Get the width (sigma) from the fit
-    sig = gaussian->GetParameter(2);
-
-    //std::ofstream outfile("out.dat", std::ios::app);
-
-    //outfile<<k<<","<<h<<","<<sig<<endl;
-
-    //outfile.close();
-
-    //delete reco_Z;
-
-  //}
-
-  //}
-
-  //pos_z->Draw("");
-  reco_Z->Draw("hist");
-  //}
-
-  //cout<<count/500<<endl;
-
-
-//}
-
-    //cout<<xCenter.size()<<endl;
-
+    PlotFit(fit_z,fit_y);
 
   app.Run();
   return 0;
